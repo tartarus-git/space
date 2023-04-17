@@ -1,7 +1,5 @@
-#include <GL/gl.h>
 #define GL_GLEXT_PROTOTYPES
-#include <GL/glext.h>
-// TODO: Figure out how to get the signatures from glext.h. For some reason, it's not working.
+#include <GL/gl.h>
 
 #include "renderer_t.h"
 #include "entity_renderer_t.h"
