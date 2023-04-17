@@ -1,5 +1,11 @@
-MAIN_CPP_INCLUDES         := src/debug/logger.h
-DEBUG_LOGGER_CPP_INCLUDES := src/debug/logger.h
+MAIN_CPP_INCLUDES              := src/debug/logger.h
+DEBUG_LOGGER_CPP_INCLUDES      := src/debug/logger.h
+EXIT_PROGRAM_CPP_INCLUDES      := src/exit_program.h
+MAIN_GAME_CODE_CPP_INCLUDES    := src/main_game_code.h
+CAMERA_T_CPP_INCLUDES          := src/rendering/camera_t.h
+ENTITY_RENDERER_T_CPP_INCLUDES := src/rendering/entity_renderer_t.h
+ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h
+SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h
 
 BINARY_NAME := space
 
@@ -22,7 +28,7 @@ all: bin/$(BINARY_NAME)
 unoptimized:
 	$(MAKE) OPTIMIZATION_LEVEL:=O0
 
-bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o
+bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o
 	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o -lGL -lglfw
 
 bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
@@ -31,6 +37,27 @@ bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
 bin/debug/logger.o: src/debug/logger.cpp $(DEBUG_LOGGER_CPP_INCLUDES) bin/debug/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/debug/logger.o src/debug/logger.cpp
 
+bin/exit_program.o: src/exit_program.cpp $(EXIT_PROGRAM_CPP_INCLUDES) bin/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/exit_program.o src/exit_program.cpp
+
+bin/main_game_code.o: src/main_game_code.cpp $(MAIN_GAME_CODE_CPP_INCLUDES) bin/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/main_game_code.o src/main_game_code.cpp
+
+bin/rendering/camera_t.o: src/rendering/camera_t.cpp $(CAMERA_T_CPP_INCLUDES) bin/rendering/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/rendering/camera_t.o src/rendering/camera_t.cpp
+
+bin/rendering/entity_renderer_t.o: src/rendering/entity_renderer_t.cpp $(ENTITY_RENDERER_T_CPP_INCLUDES) bin/rendering/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/rendering/entity_renderer_t.o src/rendering/entity_renderer_t.cpp
+
+bin/rendering/renderer_t.o: src/rendering/renderer_t.cpp $(RENDERER_T_CPP_INCLUDES) bin/rendering/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/rendering/renderer_t.o src/rendering/renderer_t.cpp
+
+bin/shaders/entity_shader_t.o: src/shaders/entity_shader_t.cpp $(ENTITY_SHADER_T_CPP_INCLUDES) bin/shaders/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/shaders/entity_shader_t.o src/shaders/entity_shader_t.cpp
+
+bin/shaders/shader_t.o: src/shaders/shader_t.cpp $(SHADER_T_CPP_INCLUDES) bin/shaders/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/shaders/shader_t.o src/shaders/shader_t.cpp
+
 bin/.dirstamp:
 	mkdir -p bin
 	touch bin/.dirstamp
@@ -38,6 +65,14 @@ bin/.dirstamp:
 bin/debug/.dirstamp: bin/.dirstamp
 	mkdir -p bin/debug
 	touch bin/debug/.dirstamp
+
+bin/rendering/.dirstamp: bin/.dirstamp
+	mkdir -p bin/rendering
+	touch bin/rendering/.dirstamp
+
+bin/shaders/.dirstamp: bin/.dirstamp
+	mkdir -p bin/shaders
+	touch bin/shaders/.dirstamp
 
 touch_all_necessary:
 	touch src/main.cpp
