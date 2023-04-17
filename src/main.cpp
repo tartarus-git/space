@@ -3,6 +3,8 @@
 
 #include <cstdlib>
 
+#include "main_game_code.h"
+
 #include "debug/logger.h"
 
 void glfw_error_callback(int error, const char *description) noexcept {
@@ -10,10 +12,8 @@ void glfw_error_callback(int error, const char *description) noexcept {
 }
 
 void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) noexcept {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
-		debug::logger << "[INFO]: escape key pressed, winodw should close flag set\n";
-	}
+	// NOTE: This function is found in main_game_code.h
+	key_event(window, key, scancode, action, mods);
 }
 
 int main() {
@@ -37,10 +37,18 @@ int main() {
 
 	glfwSetKeyCallback(window, glfw_key_callback);
 
+	int frame_buffer_width, frame_buffer_height;
+	glfwGetFramebufferSize(window, &frame_buffer_width, &frame_buffer_height);
+	glViewport(0, 0, frame_buffer_width, frame_buffer_height);
+
+	glfwSwapInterval(1);
+
 	debug::logger << "[INFO]: window loop entered\n";
 
 	while (!glfwWindowShouldClose(window)) {		// TODO: This doesn't close properly.
-		// TODO: everything
+		game_loop(window);
+		glfwSwapBuffers(window);
+		glfwPollEvents();
 	}
 
 	debug::logger << "[INFO]: window loop exited\n";
