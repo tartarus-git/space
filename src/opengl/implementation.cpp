@@ -1,6 +1,12 @@
 #define GL_GLEXT_PROTOTYPES	// NOTE: This shouldn't be necessary in this file, but I'm doing it anyway because why not? Just in case.
 #include <GL/gl.h>
 
+using void_func_ptr = void(*)();
+
+extern "C" {
+	void_func_ptr glXGetProcAddressARB(const GLubyte *func_name);
+}
+
 #include "debug/logger.h"
 #include "exit_program.h"
 
@@ -14,39 +20,44 @@
 // the context isn't the right version or something.
 // NOTE: This isn't a problem though because I'll simply only use functions that I know my context version definitely supports.
 
-template <typename T>
-using trash_bool_t = bool;
-
 class does_glXGetProcAddress_exist {
 	using no  = char(&)[1];
 	using yes = char(&)[2];
 
-	template <trash_bool_t<decltype(glXGetProcAddress)> = true>
-	// NOTE: The above seems weird, but SFINAE still works here, even though the key part isn't in a dependant context.
-	// That doesn't matter, because the validity is still only checked when substituting, making it fall under SFINAE's jurisdiction.
-	consteval yes filter(void*);
+	template <auto trash_data>
+	consteval yes filter(decltype(glXGetProcAddress(trash_data))*) const;
+	// NOTE: The above works because the function signature is in type dependant context. If it weren't, the validity
+	// would be immediately evaluated, which moves it outside of SFINAE's jurisdiction because it doesn't wait until substitution.
+	// NOTE: This must wait until substitution, making SFINAE work. See very similar behavior in static_assert condition.
 
-	consteval no filter(...);
+	template <auto trash_data>
+	consteval no filter(...) const;
 
 public:
-	consteval operator bool() const { return sizeof(filter(nullptr)) == sizeof(yes); }
+	consteval operator bool() const { return sizeof(filter<nullptr>(nullptr)) == sizeof(yes); }
 };
 
+// NOTE: The following wrapper is necessary for the constexpr to work, because it only filters out errors in substitution.
+template <typename T = const GLubyte*>
+void_func_ptr glXGetProcAddress_substitution_wrapper(T func_name) noexcept {
+	if constexpr (does_glXGetProcAddress_exist{}) { return glXGetProcAddress(func_name); }
+	return nullptr;
+}
+
 // TODO: Checks if the func is in the header, but not if the symbol can be linked to. Is the latter even possible in C++?
+// NOTE: No noexcept because the signature in the glext.h header is without noexcept and I'm too lazy to change that.
 #define GEN_IMPL(func_name, ret_type, invocation_args, ...) ret_type APIENTRY func_name(__VA_ARGS__) { \
 	static ret_type (APIENTRY *ptr)(__VA_ARGS__) = nullptr; \
 	if (!ptr) { \
-		ptr = (decltype(ptr))glXGetProcAddressARB(#func_name); \
+		ptr = (decltype(ptr))glXGetProcAddressARB((const GLubyte*)#func_name); \
 		if (!ptr) { \
-			if constexpr (does_glXGetProcAddress_exist{}) { \
-				ptr = (decltype(ptr))glXGetProcAddress(#func_name); \
-				if (ptr) { return ptr ## invocation_args; } \
-			} \
+			ptr = (decltype(ptr))glXGetProcAddress_substitution_wrapper((const GLubyte*)#func_name); \
+			if (ptr) { return ptr invocation_args; } /* TODO: COMPILER BUG!!! There was ## between ptr and invocation_args but the compiler couldn't handle that for some reason. This works fine. RESEARCH FURTHER AND REPORT IF NECESSARY!!! */ \
 			debug::logger << "[ERROR]: function bind for " << #func_name << " failed\n"; \
 			exit_program(EXIT_FAILURE); \
 		} \
 	} \
-	return ptr ## invocation_args; /* This works even if ptr() doesn't return anything because of language. */\
+	return ptr invocation_args; /* This works even if ptr() doesn't return anything because of language. */ \
 }
 
 GEN_IMPL(glUseProgram, void, (program), GLuint program)

@@ -29,8 +29,8 @@ all: bin/$(BINARY_NAME)
 unoptimized:
 	$(MAKE) OPTIMIZATION_LEVEL:=O0
 
-bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o
-	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o -lGL -lglfw
+bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o
+	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o -lGL -lglfw
 
 bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/main.o src/main.cpp

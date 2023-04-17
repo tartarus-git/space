@@ -1,8 +1,10 @@
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 
 #include "shader_t.h"
 
 #include <new>
+#include <cstring>
 
 #include "math/matrix4f_t.h"
 
@@ -19,7 +21,7 @@ void shader_t::set_shader_source_and_compile(GLuint shader_id, const char *sourc
 	if (result == GL_FALSE) {
 		debug::logger << "[ERROR]: shader compilation failed in set_shader_source_and_compile() (source debug ID: " << source_debug_id << "):\n";
 
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &result);
+		glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &result);
 		if (result == 0) {
 			debug::logger << "[ERROR]: no info log available for compilation failure in set_shader_source_and_compile()\n";
 			exit_program(EXIT_FAILURE);
@@ -31,7 +33,7 @@ void shader_t::set_shader_source_and_compile(GLuint shader_id, const char *sourc
 			exit_program(EXIT_FAILURE);
 		}
 
-		glGetShaderInfoLog(shader, result, nullptr, info_log_buffer);
+		glGetShaderInfoLog(shader_id, result, nullptr, info_log_buffer);
 		debug::logger << info_log_buffer << '\n';
 
 		delete[] info_log_buffer;
@@ -52,7 +54,7 @@ shader_t::shader_t(const char *vertex_source_debug_id, const char *vertex_source
 	set_shader_source_and_compile(fragment_shader_id, fragment_source_debug_id, fragment_source);
 	// TODO: Implement above function.
 
-	GLuint program_id = glCreateProgram();
+	program_id = glCreateProgram();
 	if (program_id == 0) {
 		debug::logger << "[ERROR]: glCreateProgram() failed in shader_t constructor\n";
 		exit_program(EXIT_FAILURE);
@@ -93,11 +95,9 @@ shader_t::shader_t(const char *vertex_source_debug_id, const char *vertex_source
 
 	glDeleteShader(vertex_shader_id);
 	glDeleteShader(fragment_shader_id);
-
-	return program_id;
 }
 
-void shader_t::load_matrix4f(GLuint uniform_id, const matrix4f_t& matrix) noexcept {
+void shader_t::load_matrix4f(GLuint uniform_id, const matrix4f_t& matrix) const noexcept {
 	GLfloat buffer[16];
 	std::memcpy(buffer, &matrix, sizeof(buffer));
 	glUniformMatrix4fv(uniform_id, 1, GL_TRUE, buffer);

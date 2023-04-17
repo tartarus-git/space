@@ -14,8 +14,8 @@ public:
 
 	entity_shader_t() noexcept;
 
-	void load_view_transform(const matrix4f_t& matrix) noexcept;
-	void load_projection_transform(const matrix4f_t& matrix) noexcept;
+	void load_view_transform(const matrix4f_t& matrix) const noexcept;
+	void load_projection_transform(const matrix4f_t& matrix) const noexcept;
 
-	void load_entity_transform(const matrix4f_t& matrix) noexcept;
+	void load_entity_transform(const matrix4f_t& matrix) const noexcept;
 };
