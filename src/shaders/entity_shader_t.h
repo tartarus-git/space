@@ -1,6 +1,12 @@
 #pragma once
 
-class entity_shader_t : shader_t {
+#include <GL/gl.h>
+
+#include "shader_t.h"
+
+#include "math/matrix4f_t.h"
+
+class entity_shader_t : public shader_t {
 public:
 	GLuint shader_view_transform;
 	GLuint shader_projection_transform;

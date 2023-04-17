@@ -1,4 +1,7 @@
 #include <GL/gl.h>
+#define GL_GLEXT_PROTOTYPES
+#include <GL/glext.h>
+// TODO: Figure out how to get the signatures from glext.h. For some reason, it's not working.
 
 #include "renderer_t.h"
 #include "entity_renderer_t.h"
@@ -10,22 +13,23 @@ entity_renderer_t::entity_renderer_t(const scene_t *scene,
 				     const matrix4f_t *projection_matrix) noexcept : 
 					renderer_t(scene), 
 					view_transform(camera.gen_view_transform()), 
-					projection_matrix(projection_matrix) { }
+					projection_transform(projection_matrix) { }
 
 void entity_renderer_t::overwrite_view_transform_with_camera(const camera_t& camera) noexcept {
 	view_transform = camera.gen_view_transform();
 }
 
-void apply_matrix_to_view_transform(const matrix4f_t& matrix) noexcept {
-	view_matrix = matrix * view_matrix;
+void entity_renderer_t::apply_matrix_to_view_transform(const matrix4f_t& matrix) noexcept {
+	view_transform = matrix * view_transform;
 }
 
-void update_projection_transform(const matrix4f_t *matrix_ptr) noexcept {
-	projection_transform = matrix;
+void entity_renderer_t::update_projection_transform(const matrix4f_t *matrix_ptr) noexcept {
+	projection_transform = matrix_ptr;
 }
 
 void entity_renderer_t::render() noexcept {
 	glUseProgram(scene->entity_shader->program_id);
+	// TODO: create implementation file for all the unknown functions.
 	
 	for (size_t i = 0; i < scene->entities.size(); i++) {
 		scene->entity_shader->load_entity_transform(scene->entities[i].transform);

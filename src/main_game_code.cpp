@@ -1,3 +1,9 @@
+#include <GLFW/glfw3.h>
+
+#include "rendering/entity_renderer_t.h"
+
+#include "debug/logger.h"
+
 void key_event(GLFWwindow *window, int key, int scancode, int action, int mods) noexcept {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, true);
@@ -5,12 +11,11 @@ void key_event(GLFWwindow *window, int key, int scancode, int action, int mods) 
 	}
 }
 
-renderer_t renderer;
+entity_renderer_t entity_renderer;
 
 void init(GLFWwindow *window) noexcept {
-	renderer = renderer_t(scene);
 }
 
 void game_loop(GLFWwindow *window) noexcept {
-	renderer.render();
+	entity_renderer.render();
 }

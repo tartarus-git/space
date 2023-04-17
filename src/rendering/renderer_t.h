@@ -1,5 +1,7 @@
 #pragma once
 
+#include "scene/scene_t.h"
+
 class renderer_t {
 public:
 	const scene_t *scene;
