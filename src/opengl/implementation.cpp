@@ -14,8 +14,6 @@
 // the context isn't the right version or something.
 // NOTE: This isn't a problem though because I'll simply only use functions that I know my context version definitely supports.
 
-// TODO: Member detector idiom for detecting that second function?
-
 template <typename T>
 using trash_bool_t = bool;
 
@@ -24,7 +22,8 @@ class does_glXGetProcAddress_exist {
 	using yes = char(&)[2];
 
 	template <trash_bool_t<decltype(glXGetProcAddress)> = true>
-		// TODO: Write not about how the above works.
+	// NOTE: The above seems weird, but SFINAE still works here, even though the key part isn't in a dependant context.
+	// That doesn't matter, because the validity is still only checked when substituting, making it fall under SFINAE's jurisdiction.
 	consteval yes filter(void*);
 
 	consteval no filter(...);
@@ -39,7 +38,7 @@ public:
 	if (!ptr) { \
 		ptr = (decltype(ptr))glXGetProcAddressARB(#func_name); \
 		if (!ptr) { \
-			if constexpr (does_glXGetProcAddress_exst{}) { \
+			if constexpr (does_glXGetProcAddress_exist{}) { \
 				ptr = (decltype(ptr))glXGetProcAddress(#func_name); \
 				if (ptr) { return ptr ## invocation_args; } \
 			} \

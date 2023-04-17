@@ -27,7 +27,6 @@ void entity_renderer_t::update_projection_transform(const matrix4f_t *matrix_ptr
 
 void entity_renderer_t::render() noexcept {
 	glUseProgram(scene->entity_shader->program_id);
-	// TODO: create implementation file for all the unknown functions.
 	
 	for (size_t i = 0; i < scene->entities.size(); i++) {
 		scene->entity_shader->load_entity_transform(scene->entities[i].transform);
