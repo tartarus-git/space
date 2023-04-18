@@ -32,6 +32,7 @@ void APIENTRY opengl_debug_message_callback(GLenum source,
 	}
 
 	debug::logger << "opengl_debug_message_callback: " << "type=" << type << " severity=" << severity << " message:\n" << message << '\n';
+	// TODO: Put an fflush or something in exit_program so that we don't have to deal with flushing the debug output.
 
 	switch (type) {
 	case GL_DEBUG_TYPE_ERROR:
