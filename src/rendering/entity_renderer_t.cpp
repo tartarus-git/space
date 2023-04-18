@@ -31,11 +31,10 @@ void entity_renderer_t::render() noexcept {
 	for (size_t i = 0; i < scene->entities.size(); i++) {
 		scene->entity_shader->load_entity_transform(scene->entities[i].transform);
 
-		glBindVertexArray(scene->entities[i].VAO_id);
+		glBindVertexArray(scene->entities[i].mesh->VAO_id);
 		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		// NOTE: Change to GL_UNSIGNED_INT if you need more vertices than what uint16 provides.
-		glDrawElements(GL_TRIANGLES, scene->entities[i].mesh->indices.size() * 3, GL_UNSIGNED_SHORT, nullptr);
+		// TODO: Consider switching to SHORT, but it'll require a different vector. You could template the mesh class.
+		glDrawElements(GL_TRIANGLES, scene->entities[i].mesh->indices.size() * 3, GL_UNSIGNED_INT, nullptr);
 		// NOTE: Not disabling for now because it's pointless.
 	}
 }

@@ -1,3 +1,9 @@
+# TODO: Create some nice command-line tools to automate some of this.
+# For example, there should be a tool to automatically generate the user header files that cpp files include so we don't need
+# to keep the following list up-to-date.
+# There should also be a tool to list all the cpp files in a folder tree and write them side-by-side for use in the makefile.
+# Maybe also a tool to generate the bin/debug/x.o: etc... pattern over and over for every file.
+
 MAIN_CPP_INCLUDES              := src/debug/logger.h
 DEBUG_LOGGER_CPP_INCLUDES      := src/debug/logger.h
 EXIT_PROGRAM_CPP_INCLUDES      := src/exit_program.h
@@ -7,6 +13,7 @@ ENTITY_RENDERER_T_CPP_INCLUDES := src/rendering/entity_renderer_t.h
 ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h
 SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h
 IMPLEMENTATION_CPP_INCLUDES    := src/debug/logger.h src/exit_program.h
+MESH_T_CPP_INCLUDES            := src/geometry/mesh_t.h
 
 BINARY_NAME := space
 
@@ -29,8 +36,8 @@ all: bin/$(BINARY_NAME)
 unoptimized:
 	$(MAKE) OPTIMIZATION_LEVEL:=O0
 
-bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o
-	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o -lGL -lglfw
+bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o bin/geometry/mesh_t.o
+	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o bin/geometry/mesh_t.o -lGL -lglfw
 
 bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/main.o src/main.cpp
@@ -62,6 +69,9 @@ bin/shaders/shader_t.o: src/shaders/shader_t.cpp $(SHADER_T_CPP_INCLUDES) bin/sh
 bin/opengl/implementation.o: src/opengl/implementation.cpp $(IMPLEMENTATION_CPP_INCLUDES) bin/opengl/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/opengl/implementation.o src/opengl/implementation.cpp
 
+bin/geometry/mesh_t.o: src/geometry/mesh_t.cpp $(MESH_T_CPP_INCLUDES) bin/geometry/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/geometry/mesh_t.o src/geometry/mesh_t.cpp
+
 bin/.dirstamp:
 	mkdir -p bin
 	touch bin/.dirstamp
@@ -82,6 +92,10 @@ bin/opengl/.dirstamp: bin/.dirstamp
 	mkdir -p bin/opengl
 	touch bin/opengl/.dirstamp
 
+bin/geometry/.dirstamp: bin/.dirstamp
+	mkdir -p bin/geometry
+	touch bin/geometry/.dirstamp
+
 touch_all_necessary:
 	touch src/main.cpp
 	touch src/debug/logger.cpp
@@ -93,6 +107,7 @@ touch_all_necessary:
 	touch src/shaders/entity_shader_t.cpp
 	touch src/shaders/shader_t.cpp
 	touch src/opengl/implementation.cpp
+	touch src/geometry/mesh_t.cpp
 
 # The normal clean rule ignores swap files in case you have open vim instances. This is respectful to them.
 # Use the clean_include_swaps rule to clean every untracked file. You can do that if you don't have any vim instances open.

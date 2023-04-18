@@ -10,9 +10,6 @@
 #include "math/matrix4f_t.h"
 
 struct entity_t {
-	// TODO: You probs wanna move the VAO thing inside the mesh.
-	GLuint VAO_id;
-
 	const mesh_t *mesh;
 	const texture_t *texture;
 
