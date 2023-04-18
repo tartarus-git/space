@@ -51,6 +51,8 @@ int main() {
 
 	debug::logger << "[INFO]: window loop entered\n";
 
+	// TODO: OpenGL error handling and depth and color reset functions.
+
 	while (!glfwWindowShouldClose(window)) {		// TODO: This doesn't close properly.
 		game_loop(window);
 		glfwSwapBuffers(window);
