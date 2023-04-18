@@ -13,12 +13,11 @@
 #include "debug/logger.h"
 #include "exit_program.h"
 
-void key_event(GLFWwindow *window, int key, int scancode, int action, int mods) noexcept {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
-		debug::logger << "[INFO]: escape key pressed, window should close flag set\n";
-	}
-}
+#define PLAYER_MOVE_SPEED 0.001f
+#define PLAYER_LOOK_SPEED 0.001f
+
+// NOTE: Uncomment to use mouse for rotation instead of arrow keys. Doesn't work in WSL because of interop difficulties.
+//#define MOUSE_ROTATION
 
 mesh_t test_entity_mesh;
 texture_t test_entity_texture;
@@ -38,6 +37,87 @@ camera_t camera;
 matrix4f_t projection_matrix;
 
 entity_renderer_t entity_renderer;
+
+namespace key_flags {
+	bool w = false;
+	bool a = false;
+	bool s = false;
+	bool d = false;
+
+	bool up_arrow = false;
+	bool left_arrow = false;
+	bool down_arrow = false;
+	bool right_arrow = false;
+};
+
+void key_event(GLFWwindow *window, int key, int scancode, int action, int mods) noexcept {
+	switch (key) {
+	case GLFW_KEY_ESCAPE:
+		if (action == GLFW_PRESS) {
+			glfwSetWindowShouldClose(window, true);
+			debug::logger << "[INFO]: escape key pressed, window should close flag set\n";
+		}
+		break;
+	case GLFW_KEY_W:
+		switch (action) {
+		case GLFW_PRESS: key_flags::w = true; break;
+		case GLFW_RELEASE: key_flags::w = false;
+		}
+		break;
+	case GLFW_KEY_A:
+		switch (action) {
+		case GLFW_PRESS: key_flags::a = true; break;
+		case GLFW_RELEASE: key_flags::a = false;
+		}
+		break;
+	case GLFW_KEY_S:
+		switch (action) {
+		case GLFW_PRESS: key_flags::s = true; break;
+		case GLFW_RELEASE: key_flags::s = false;
+		}
+		break;
+	case GLFW_KEY_D:
+		switch (action) {
+		case GLFW_PRESS: key_flags::d = true; break;
+		case GLFW_RELEASE: key_flags::d = false;
+		}
+		break;
+	case GLFW_KEY_UP:
+		switch (action) {
+		case GLFW_PRESS: key_flags::up_arrow = true; break;
+		case GLFW_RELEASE: key_flags::up_arrow = false;
+		}
+		break;
+	case GLFW_KEY_LEFT:
+		switch (action) {
+		case GLFW_PRESS: key_flags::left_arrow = true; break;
+		case GLFW_RELEASE: key_flags::left_arrow = false;
+		}
+		break;
+	case GLFW_KEY_DOWN:
+		switch (action) {
+		case GLFW_PRESS: key_flags::down_arrow = true; break;
+		case GLFW_RELEASE: key_flags::down_arrow = false;
+		}
+		break;
+	case GLFW_KEY_RIGHT:
+		switch (action) {
+		case GLFW_PRESS: key_flags::right_arrow = true; break;
+		case GLFW_RELEASE: key_flags::right_arrow = false;
+		}
+		break;
+	}
+}
+
+double virtual_cursor_x = 0;
+double virtual_cursor_y = 0;
+bool cursor_position_changed = false;
+
+void cursor_position_event(GLFWwindow *window, double x, double y) noexcept {
+	virtual_cursor_x = x;
+	virtual_cursor_y = y;
+	cursor_position_changed = true;
+}
 
 void game_init(GLFWwindow *window) noexcept {
 	test_entity_mesh = mesh_t(
@@ -81,4 +161,56 @@ void game_init(GLFWwindow *window) noexcept {
 
 void game_loop(GLFWwindow *window) noexcept {
 	entity_renderer.render();
+
+#ifdef MOUSE_ROTATION
+	if (cursor_position_changed) {
+		// NOTE: Don't worry about thread-safety, I'm pretty sure the callbacks are on this thread as well.
+		// NOTE: Yes, we could have the callback set camera directly, but that's less safe because
+		// other code could use camera and have it changed unexpectedly, whereas the cursor variables can change all they want,
+		// because we only check them here.
+		camera.rotation.x = virtual_cursor_x * PLAYER_LOOK_SPEED;
+		camera.rotation.y = virtual_cursor_y * PLAYER_LOOK_SPEED;
+		entity_renderer.view_transform = camera.gen_view_transform();
+		cursor_position_changed = false;
+	}
+#else
+	bool rotation_changed = false;
+	if (key_flags::up_arrow) {
+		camera.rotation.z += PLAYER_LOOK_SPEED;
+		rotation_changed = true;
+	}
+	if (key_flags::left_arrow) {
+		camera.rotation.y += PLAYER_LOOK_SPEED;
+		rotation_changed = true;
+	}
+	if (key_flags::down_arrow) {
+		camera.rotation.z -= PLAYER_LOOK_SPEED;
+		rotation_changed = true;
+	}
+	if (key_flags::right_arrow) {
+		camera.rotation.y -= PLAYER_LOOK_SPEED;
+		rotation_changed = true;
+	}
+	if (rotation_changed) {
+		entity_renderer.view_transform = camera.gen_view_transform();
+	}
+#endif
+
+	if (key_flags::w) {
+		camera.position.z -= PLAYER_MOVE_SPEED;
+		// NOTE: Don't worry, gen_translate is constexpr, and so is the xyz constructor of vector3f_t.
+		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+	}
+	if (key_flags::a) {
+		camera.position.x -= PLAYER_MOVE_SPEED;
+		entity_renderer.view_transform = matrix4f_t::gen_translate({ PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+	}
+	if (key_flags::s) {
+		camera.position.z += PLAYER_MOVE_SPEED;
+		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, -PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+	}
+	if (key_flags::d) {
+		camera.position.x += PLAYER_MOVE_SPEED;
+		entity_renderer.view_transform = matrix4f_t::gen_translate({ -PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+	}
 }

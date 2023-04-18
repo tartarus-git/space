@@ -15,8 +15,7 @@ uniform mat4 shader_projection_transform;
 uniform mat4 shader_entity_transform;
 
 void main() {
-// TODO: view matrix
-    vec4 temp_frag_pos_4d = shader_entity_transform * vec4(vertex_position_modelspace, 1);
+    vec4 temp_frag_pos_4d = shader_view_transform * shader_entity_transform * vec4(vertex_position_modelspace, 1);
     gl_Position = shader_projection_transform * temp_frag_pos_4d;
 }
 )unique_scope";

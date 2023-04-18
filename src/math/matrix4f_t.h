@@ -108,6 +108,38 @@ public:
 		};
 	}
 
+	static matrix4f_t gen_fps_rotation(vector3f_t rotations) noexcept {
+		float cosx = cosf(rotations.x);
+		float sinx = sinf(rotations.x);
+		float nsinx = -sinx;
+
+		float cosy = cosf(rotations.y);
+		float siny = sinf(rotations.y);
+		float nsiny = -siny;
+
+		float cosz = cosf(rotations.z);
+		float sinz = sinf(rotations.z);
+		float nsinz = -sinz;
+
+		// TODO: Understand this new ordering and also check to make sure the ordering for the other, space-wise one, also makes sense and that you understand it.
+		return matrix4f_t {
+			1, 0, 0, 0,
+			0, cosz, nsinz, 0,
+			0, sinz, cosz, 0,
+			0, 0, 0, 1
+		} * matrix4f_t {
+			cosy,     0, siny, 0,
+			   0,     1,    0, 0,
+			nsiny, 0,    cosy, 0,
+			0, 0, 0, 1
+		} * matrix4f_t {
+			cosx, nsinx,    0, 0,
+			sinx,  cosx,    0, 0,
+			   0,     0,    1, 0,
+			   0,     0,    0, 1
+		};
+	}
+
 	// NOTE: aspect_ratio is height/width ---> NO ITS NOT, its the opposite while we're using that pre-built mechanism.
 	static matrix4f_t gen_projection(float near_plane, float far_plane, float aspect_ratio, float FOV) noexcept {
 		return {

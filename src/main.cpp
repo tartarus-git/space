@@ -52,6 +52,11 @@ void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, in
 	key_event(window, key, scancode, action, mods);
 }
 
+void glfw_cursor_position_callback(GLFWwindow *window, double x, double y) noexcept {
+	// NOTE: This function is found in main_game_code.h
+	cursor_position_event(window, x, y);
+}
+
 int main() {
 	if (!glfwInit()) {
 		debug::logger << "glfwInit() failed\n";
@@ -100,6 +105,22 @@ int main() {
 	debug::logger << "[INFO]: game_init() finished\n";
 
 	glfwSetKeyCallback(window, glfw_key_callback);
+
+	// NOTES: cursor disabled hides the cursor, centers it on the screen, recenters automatically, and provides you with
+	// absolute virtual mouse coords, as in where the mouse would be if it was unbounded. This means
+	// these absolute coords can be directly turned into the current player rotation.
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// NOTES: Raw mouse motion is as close as we can get to the actual behavior of the mouse on the surface, which is good
+	// for 3D cameras, since it bypasses DPI scaling, custom speeds in the OS settings, and that sort of thing.
+	// If that's not possible, we're forced to use the adjusted mouse movements, which will also work fine in most cases,
+	// they're just not optimal.
+	if (glfwRawMouseMotionSupported()) {
+		glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, true);
+		debug::logger << "[INFO]: raw mouse motion supported and used\n";
+	} else {
+		debug::logger << "[INFO]: raw mouse motion unsupported, falling back on normal mouse movement\n";
+	}
+	glfwSetCursorPosCallback(window, glfw_cursor_position_callback);
 
 	debug::logger << "[INFO]: window loop entered\n";
 
