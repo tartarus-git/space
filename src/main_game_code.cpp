@@ -41,7 +41,7 @@ entity_renderer_t entity_renderer;
 
 void game_init(GLFWwindow *window) noexcept {
 	test_entity_mesh = mesh_t(
-		{ { -1, -1, 0 }, { 1, -1, 0 }, { 0, 1, 0 } },
+		{ { -1, -1, -1 }, { 1, -1, -1 }, { 0, 1, -1 } },
 		{ { 0, 1, 2 } }
 	);
 
@@ -74,7 +74,7 @@ void game_init(GLFWwindow *window) noexcept {
 	int height;
 	glfwGetFramebufferSize(window, &width, &height);
 
-	projection_matrix = matrix4f_t::gen_projection(0.1f, 1000, height / width, 1.5f);
+	projection_matrix = matrix4f_t::gen_projection(0.1f, 1000, width / height, 1);
 
 	entity_renderer = entity_renderer_t(&scene, camera, &projection_matrix);
 }

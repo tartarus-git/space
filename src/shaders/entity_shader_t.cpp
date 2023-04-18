@@ -40,6 +40,15 @@ entity_shader_t::entity_shader_t() noexcept : shader_t("entity_vertex_shader", e
 
 }
 
-void entity_shader_t::load_view_transform(const matrix4f_t& matrix) const noexcept       { load_matrix4f(shader_view_transform, matrix); }
-void entity_shader_t::load_projection_transform(const matrix4f_t& matrix) const noexcept { load_matrix4f(shader_projection_transform, matrix); }
-void entity_shader_t::load_entity_transform(const matrix4f_t& matrix) const noexcept     { load_matrix4f(shader_entity_transform, matrix); }
+void entity_shader_t::load_view_transform(const matrix4f_t& matrix) const noexcept {
+	glUseProgram(program_id);
+	load_matrix4f(shader_view_transform, matrix);
+}
+void entity_shader_t::load_projection_transform(const matrix4f_t& matrix) const noexcept {
+	glUseProgram(program_id);
+	load_matrix4f(shader_projection_transform, matrix);
+}
+void entity_shader_t::load_entity_transform(const matrix4f_t& matrix) const noexcept {
+	glUseProgram(program_id);
+	load_matrix4f(shader_entity_transform, matrix);
+}

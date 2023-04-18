@@ -27,6 +27,10 @@ void entity_renderer_t::update_projection_transform(const matrix4f_t *matrix_ptr
 
 void entity_renderer_t::render() noexcept {
 	glUseProgram(scene->entity_shader->program_id);
+
+	scene->entity_shader->load_view_transform(view_transform);
+	scene->entity_shader->load_projection_transform(*projection_transform);
+	// TODO: Probs don't do the above two every render.
 	
 	for (size_t i = 0; i < scene->entities.size(); i++) {
 		scene->entity_shader->load_entity_transform(scene->entities[i].transform);

@@ -108,7 +108,7 @@ public:
 		};
 	}
 
-	// NOTE: aspect_ratio is height/width
+	// NOTE: aspect_ratio is height/width ---> NO ITS NOT, its the opposite while we're using that pre-built mechanism.
 	static matrix4f_t gen_projection(float near_plane, float far_plane, float aspect_ratio, float FOV) noexcept {
 		return {
 			1 / (aspect_ratio * tanf(FOV / 2)), 0, 0, 0,
