@@ -9,14 +9,15 @@
 #include "entities/entity_t.h"
 #include "scene/scene_t.h"
 #include "rendering/camera_t.h"
+#include "math/vector4f_t.h"
 #include "math/matrix4f_t.h"
 #include "rendering/entity_renderer_t.h"
 
 #include "debug/logger.h"
 #include "exit_program.h"
 
-#define PLAYER_MOVE_SPEED 0.001f
-#define PLAYER_LOOK_SPEED 0.001f
+#define PLAYER_MOVE_SPEED 0.1f
+#define PLAYER_LOOK_SPEED 0.01f
 
 // NOTE: Uncomment to use mouse for rotation instead of arrow keys. Doesn't work in WSL because of interop difficulties.
 //#define MOUSE_ROTATION
@@ -198,21 +199,25 @@ void game_loop(GLFWwindow *window) noexcept {
 	}
 #endif
 
+	bool position_changed = false;
 	if (key_flags::w) {
-		camera.position.z -= PLAYER_MOVE_SPEED;
 		// NOTE: Don't worry, gen_translate is constexpr, and so is the xyz constructor of vector3f_t.
 		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+		position_changed = true;
 	}
 	if (key_flags::a) {
-		camera.position.x -= PLAYER_MOVE_SPEED;
 		entity_renderer.view_transform = matrix4f_t::gen_translate({ PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+		position_changed = true;
 	}
 	if (key_flags::s) {
-		camera.position.z += PLAYER_MOVE_SPEED;
 		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, -PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+		position_changed = true;
 	}
 	if (key_flags::d) {
-		camera.position.x += PLAYER_MOVE_SPEED;
 		entity_renderer.view_transform = matrix4f_t::gen_translate({ -PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+		position_changed = true;
+	}
+	if (position_changed) {
+		//camera.position = -((entity_renderer.view_transform * vector4f_t(0, 0, 0, 1)).xyz());
 	}
 }
