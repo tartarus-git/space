@@ -4,16 +4,17 @@
 # There should also be a tool to list all the cpp files in a folder tree and write them side-by-side for use in the makefile.
 # Maybe also a tool to generate the bin/debug/x.o: etc... pattern over and over for every file.
 
-MAIN_CPP_INCLUDES              := src/debug/logger.h
+MAIN_CPP_INCLUDES              := src/main_game_code.cpp src/debug/logger.h src/exit_program.h
 DEBUG_LOGGER_CPP_INCLUDES      := src/debug/logger.h
 EXIT_PROGRAM_CPP_INCLUDES      := src/exit_program.h
-MAIN_GAME_CODE_CPP_INCLUDES    := src/main_game_code.h
-CAMERA_T_CPP_INCLUDES          := src/rendering/camera_t.h
-ENTITY_RENDERER_T_CPP_INCLUDES := src/rendering/entity_renderer_t.h
-ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h
-SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h
+MAIN_GAME_CODE_CPP_INCLUDES    := src/main_game_code.h src/geometry/mesh_t.h src/texturing/texture_t.h src/entities/entity_t.h src/scene/scene_t.h src/rendering/camera_t.h src/math/matrix4f_t.h src/rendering/entity_renderer_t.h src/debug/logger.h src/exit_program.h
+CAMERA_T_CPP_INCLUDES          := src/rendering/camera_t.h src/math/matrix4f_t.h
+ENTITY_RENDERER_T_CPP_INCLUDES := src/rendering/renderer_t.h src/rendering/entity_renderer_t.h src/scene/scene_t.h
+RENDERER_T_CPP_INCLUDES        := src/rendering/renderer_t.h src/scene/scene_t.h
+ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h src/math/matrix4f_t.h
+SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h src/math/matrix4f_t.h src/debug/logger.h src/exit_program.h
 IMPLEMENTATION_CPP_INCLUDES    := src/debug/logger.h src/exit_program.h
-MESH_T_CPP_INCLUDES            := src/geometry/mesh_t.h
+MESH_T_CPP_INCLUDES            := src/geometry/mesh_t.h src/math/vector3f_t.h src/math/vector3ui_t.h
 
 BINARY_NAME := space
 

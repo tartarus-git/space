@@ -1,5 +1,7 @@
 #include <GLFW/glfw3.h>
 
+#include "main_game_code.h"
+
 #include <new>
 
 #include "geometry/mesh_t.h"
