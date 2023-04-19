@@ -129,11 +129,8 @@ void game_init(GLFWwindow *window) noexcept {
 		{ { 0, 1, 2 } }
 	);
 
-	test_entity_texture = { };
-
 	entity_t test_entity {
 		&test_entity_mesh,
-		&test_entity_texture,
 		matrix4f_t::gen_identity()
 	};
 

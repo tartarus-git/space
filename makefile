@@ -15,6 +15,7 @@ ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h src/math/matrix4
 SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h src/math/matrix4f_t.h src/debug/logger.h src/exit_program.h
 IMPLEMENTATION_CPP_INCLUDES    := src/debug/logger.h src/exit_program.h
 MESH_T_CPP_INCLUDES            := src/geometry/mesh_t.h src/math/vector3f_t.h src/math/vector3ui_t.h
+SKYBOX_TEXTURE_T_CPP_INCLUDES  := src/texturing/skybox_texture_t.h
 
 BINARY_NAME := space
 
@@ -37,8 +38,8 @@ all: bin/$(BINARY_NAME)
 unoptimized:
 	$(MAKE) OPTIMIZATION_LEVEL:=O0
 
-bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o bin/geometry/mesh_t.o
-	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/main.o bin/debug/logger.o bin/exit_program.o bin/main_game_code.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o bin/geometry/mesh_t.o -lGL -lglfw
+bin/$(BINARY_NAME): bin/*.o bin/debug/*.o bin/rendering/*.o bin/shaders/*.o bin/opengl/*.o bin/geometry/*.o bin/baked_assets/*.o
+	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/*.o bin/debug/*.o bin/rendering/*.o bin/shaders/*.o bin/opengl/*.o bin/geometry/*.o bin/baked_assets/*.o -lGL -lglfw
 
 bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/main.o src/main.cpp
@@ -73,6 +74,21 @@ bin/opengl/implementation.o: src/opengl/implementation.cpp $(IMPLEMENTATION_CPP_
 bin/geometry/mesh_t.o: src/geometry/mesh_t.cpp $(MESH_T_CPP_INCLUDES) bin/geometry/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/geometry/mesh_t.o src/geometry/mesh_t.cpp
 
+bin/stb/implementation.o: src/stb/implementation.cpp src/stb/stb_image.h bin/stb/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/stb/implementation.o src/stb/implementation.cpp
+
+bin/texturing/skybox_texture_t.o: src/texturing/skybox_texture_t.cpp $(SKYBOX_TEXTURE_T_CPP_INCLUDES) bin/texturing/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/texturing/skybox_texture_t.o src/texturing/skybox_texture_t.cpp
+
+src/baked_assets/skybox_face_images.cpp: assets/skybox_face_image_0.png
+	echo -n "#include \"skybox_face_images.h\"\nnamespace baked_assets {\n" > src/baked_assets/skybox_face_images.cpp
+	#TODO: Put input file directly in command, don't use cat.
+	cat assets/skybox_face_image_0.png | srcembed --varname skybox_face_image_0_data c++ >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_0 = skybox_face_image_0_data;\n}\n" >> src/baked_assets/skybox_face_images.cpp
+
+bin/baked_assets/skybox_face_images.o: src/baked_assets/skybox_face_images.cpp src/baked_assets/skybox_face_images.h bin/baked_assets/.dirstamp
+	$(CLANG_PREAMBLE) -c -o bin/baked_assets/skybox_face_images.o src/baked_assets/skybox_face_images.cpp
+
 bin/.dirstamp:
 	mkdir -p bin
 	touch bin/.dirstamp
@@ -97,6 +113,14 @@ bin/geometry/.dirstamp: bin/.dirstamp
 	mkdir -p bin/geometry
 	touch bin/geometry/.dirstamp
 
+bin/texturing/.dirstamp: bin/.dirstamp
+	mkdir -p bin/texturing
+	touch bin/texturing/.dirstamp
+
+bin/baked_assets/.dirstamp: bin/.dirstamp
+	mkdir -p bin/baked_assets
+	touch bin/baked_assets/.dirstamp
+
 touch_all_necessary:
 	touch src/main.cpp
 	touch src/debug/logger.cpp
@@ -109,6 +133,9 @@ touch_all_necessary:
 	touch src/shaders/shader_t.cpp
 	touch src/opengl/implementation.cpp
 	touch src/geometry/mesh_t.cpp
+	touch src/stb/implementation.cpp
+	touch src/texturing/skybox_texture_t.cpp
+	touch assets/skybox_face_image_0.png
 
 # The normal clean rule ignores swap files in case you have open vim instances. This is respectful to them.
 # Use the clean_include_swaps rule to clean every untracked file. You can do that if you don't have any vim instances open.
