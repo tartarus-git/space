@@ -16,8 +16,8 @@
 #include "debug/logger.h"
 #include "exit_program.h"
 
-#define PLAYER_MOVE_SPEED 0.1f
-#define PLAYER_LOOK_SPEED 0.01f
+#define PLAYER_MOVE_SPEED 0.01f
+#define PLAYER_LOOK_SPEED 0.001f
 
 // NOTE: Uncomment to use mouse for rotation instead of arrow keys. Doesn't work in WSL because of interop difficulties.
 //#define MOUSE_ROTATION
@@ -162,6 +162,8 @@ void game_init(GLFWwindow *window) noexcept {
 	entity_renderer = entity_renderer_t(&scene, camera, &projection_matrix);
 }
 
+matrix4f_t player_controlled_camera_rotation_matrix = matrix4f_t::gen_identity();
+
 void game_loop(GLFWwindow *window) noexcept {
 	entity_renderer.render();
 
@@ -173,6 +175,7 @@ void game_loop(GLFWwindow *window) noexcept {
 		// because we only check them here.
 		camera.rotation.x = virtual_cursor_x * PLAYER_LOOK_SPEED;
 		camera.rotation.y = virtual_cursor_y * PLAYER_LOOK_SPEED;
+		player_controlled_camera_rotation_matrix = matrix4f_t::gen_fps_rotation(camera.rotation);
 		entity_renderer.view_transform = camera.gen_view_transform();
 		cursor_position_changed = false;
 	}
@@ -195,29 +198,35 @@ void game_loop(GLFWwindow *window) noexcept {
 		rotation_changed = true;
 	}
 	if (rotation_changed) {
+		player_controlled_camera_rotation_matrix = matrix4f_t::gen_fps_rotation(camera.rotation);
 		entity_renderer.view_transform = camera.gen_view_transform();
 	}
 #endif
 
 	bool position_changed = false;
+	vector4f_t position_change_vector { 0, 0, 0, 1 };
 	if (key_flags::w) {
-		// NOTE: Don't worry, gen_translate is constexpr, and so is the xyz constructor of vector3f_t.
-		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+		position_change_vector.z = -PLAYER_MOVE_SPEED;
 		position_changed = true;
 	}
 	if (key_flags::a) {
-		entity_renderer.view_transform = matrix4f_t::gen_translate({ PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+		position_change_vector.x = -PLAYER_MOVE_SPEED;
 		position_changed = true;
 	}
 	if (key_flags::s) {
-		entity_renderer.view_transform = matrix4f_t::gen_translate({ 0, 0, -PLAYER_MOVE_SPEED }) * entity_renderer.view_transform;
+		position_change_vector.z = PLAYER_MOVE_SPEED;
 		position_changed = true;
 	}
 	if (key_flags::d) {
-		entity_renderer.view_transform = matrix4f_t::gen_translate({ -PLAYER_MOVE_SPEED, 0, 0 }) * entity_renderer.view_transform;
+		position_change_vector.x = PLAYER_MOVE_SPEED;
 		position_changed = true;
 	}
 	if (position_changed) {
 		//camera.position = -((entity_renderer.view_transform * vector4f_t(0, 0, 0, 1)).xyz());
+		// NOTE: The above doesn't work because negating the end vector doesn't mean doing the steps in reverse.
+		// That only holds true for translation alone (maybe scaling alone too I suppose, and maybe translation and scaling
+		// together). For translation + rotation, that just yields garbage. We have to do it in a more complicated way.
+		camera.position += (player_controlled_camera_rotation_matrix * position_change_vector).xyz();
+		entity_renderer.view_transform = matrix4f_t::gen_translate(-position_change_vector.xyz()) * entity_renderer.view_transform;
 	}
 }
