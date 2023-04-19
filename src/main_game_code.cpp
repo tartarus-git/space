@@ -9,6 +9,7 @@
 #include "entities/entity_t.h"
 #include "scene/scene_t.h"
 #include "rendering/camera_t.h"
+#include "math/vector3f_t.h"
 #include "math/vector4f_t.h"
 #include "math/matrix4f_t.h"
 #include "rendering/entity_renderer_t.h"
@@ -163,6 +164,7 @@ void game_init(GLFWwindow *window) noexcept {
 }
 
 matrix4f_t player_controlled_camera_rotation_matrix = matrix4f_t::gen_identity();
+matrix4f_t player_controlled_camera_inverse_rotation_matrix = matrix4f_t::gen_identity();
 
 void game_loop(GLFWwindow *window) noexcept {
 	entity_renderer.render();
@@ -176,7 +178,8 @@ void game_loop(GLFWwindow *window) noexcept {
 		camera.rotation.x = virtual_cursor_x * PLAYER_LOOK_SPEED;
 		camera.rotation.y = virtual_cursor_y * PLAYER_LOOK_SPEED;
 		player_controlled_camera_rotation_matrix = matrix4f_t::gen_fps_rotation(camera.rotation);
-		entity_renderer.view_transform = camera.gen_view_transform();
+		player_controlled_camera_inverse_rotation_matrix = matrix4f_t::gen_fps_rotation(-camera.rotation);
+		entity_renderer.view_transform = player_controlled_camera_inverse_rotation_matrix * matrix4f_t::gen_translate(-camera.position);
 		cursor_position_changed = false;
 	}
 #else
@@ -199,7 +202,8 @@ void game_loop(GLFWwindow *window) noexcept {
 	}
 	if (rotation_changed) {
 		player_controlled_camera_rotation_matrix = matrix4f_t::gen_fps_rotation(camera.rotation);
-		entity_renderer.view_transform = camera.gen_view_transform();
+		player_controlled_camera_inverse_rotation_matrix = matrix4f_t::gen_fps_rotation(-camera.rotation);
+		entity_renderer.view_transform = player_controlled_camera_inverse_rotation_matrix * matrix4f_t::gen_translate(-camera.position);
 	}
 #endif
 
@@ -226,7 +230,14 @@ void game_loop(GLFWwindow *window) noexcept {
 		// NOTE: The above doesn't work because negating the end vector doesn't mean doing the steps in reverse.
 		// That only holds true for translation alone (maybe scaling alone too I suppose, and maybe translation and scaling
 		// together). For translation + rotation, that just yields garbage. We have to do it in a more complicated way.
-		camera.position += (player_controlled_camera_rotation_matrix * position_change_vector).xyz();
-		entity_renderer.view_transform = matrix4f_t::gen_translate(-position_change_vector.xyz()) * entity_renderer.view_transform;
+		// We could probably invert the matrix, but that's computationally expensive.
+
+		vector4f_t proposed_change = player_controlled_camera_rotation_matrix * position_change_vector;
+		proposed_change.y = 0;		// NOTE: Filter out vertical movement for FPS behavior.
+
+		camera.position += proposed_change.xyz();
+
+		vector3f_t inversely_rotated_proposed_change = (player_controlled_camera_inverse_rotation_matrix * proposed_change).xyz();
+		entity_renderer.view_transform = matrix4f_t::gen_translate(-inversely_rotated_proposed_change) * entity_renderer.view_transform;
 	}
 }
