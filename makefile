@@ -15,7 +15,7 @@ ENTITY_SHADER_T_CPP_INCLUDES   := src/shaders/entity_shader_t.h src/math/matrix4
 SHADER_T_CPP_INCLUDES          := src/shaders/shader_t.h src/math/matrix4f_t.h src/debug/logger.h src/exit_program.h
 IMPLEMENTATION_CPP_INCLUDES    := src/debug/logger.h src/exit_program.h
 MESH_T_CPP_INCLUDES            := src/geometry/mesh_t.h src/math/vector3f_t.h src/math/vector3ui_t.h
-SKYBOX_TEXTURE_T_CPP_INCLUDES  := src/texturing/skybox_texture_t.h
+SKYBOX_TEXTURE_T_CPP_INCLUDES  := src/texturing/skybox_texture_t.h src/stb/stb_image.h src/debug/logger.h src/exit_program.h
 
 BINARY_NAME := space
 
