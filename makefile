@@ -31,7 +31,7 @@ endif
 
 CLANG_PREAMBLE := $(CLANG_PROGRAM_NAME) -std=$(CPP_STD) -$(OPTIMIZATION_LEVEL) $(POSSIBLE_WALL) -fno-exceptions -pthread
 
-.PHONY: all unoptimized touch_all_necessary clean clean_include_swaps
+.PHONY: all unoptimized clean clean_include_swaps
 
 all: bin/$(BINARY_NAME)
 
@@ -80,11 +80,30 @@ bin/stb/implementation.o: src/stb/implementation.cpp src/stb/stb_image.h bin/stb
 bin/texturing/skybox_texture_t.o: src/texturing/skybox_texture_t.cpp $(SKYBOX_TEXTURE_T_CPP_INCLUDES) bin/texturing/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/texturing/skybox_texture_t.o src/texturing/skybox_texture_t.cpp
 
-src/baked_assets/skybox_face_images.cpp: assets/skybox_face_image_0.png
+src/baked_assets/skybox_face_images.cpp: assets/skybox_face_image_0.png assets/skybox_face_image_1.png assets/skybox_face_image_2.png assets/skybox_face_image_3.png assets/skybox_face_image_4.png assets/skybox_face_image_5.png
 	echo -n "#include \"skybox_face_images.h\"\nnamespace baked_assets {\n" > src/baked_assets/skybox_face_images.cpp
-	#TODO: Put input file directly in command, don't use cat.
-	cat assets/skybox_face_image_0.png | srcembed --varname skybox_face_image_0_data c++ >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_0 = skybox_face_image_0_data;\n}\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_0_data c++ < assets/skybox_face_image_0.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_0 = skybox_face_image_0_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_0 = sizeof(skybox_face_image_0_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_1_data c++ < assets/skybox_face_image_1.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_1 = skybox_face_image_1_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_1 = sizeof(skybox_face_image_1_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_2_data c++ < assets/skybox_face_image_2.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_2 = skybox_face_image_2_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_2 = sizeof(skybox_face_image_2_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_2_data c++ < assets/skybox_face_image_2.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_2 = skybox_face_image_2_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_2 = sizeof(skybox_face_image_2_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_3_data c++ < assets/skybox_face_image_3.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_3 = skybox_face_image_3_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_3 = sizeof(skybox_face_image_3_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_4_data c++ < assets/skybox_face_image_4.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_4 = skybox_face_image_4_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_4 = sizeof(skybox_face_image_4_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	srcembed --varname skybox_face_image_5_data c++ < assets/skybox_face_image_5.png >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const char *skybox_face_image_5 = skybox_face_image_5_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const size_t skybox_face_image_size_5 = sizeof(skybox_face_image_5_data);\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "}\n" >> src/baked_assets/skybox_face_images.cpp
 
 bin/baked_assets/skybox_face_images.o: src/baked_assets/skybox_face_images.cpp src/baked_assets/skybox_face_images.h bin/baked_assets/.dirstamp
 	$(CLANG_PREAMBLE) -c -o bin/baked_assets/skybox_face_images.o src/baked_assets/skybox_face_images.cpp
@@ -120,22 +139,6 @@ bin/texturing/.dirstamp: bin/.dirstamp
 bin/baked_assets/.dirstamp: bin/.dirstamp
 	mkdir -p bin/baked_assets
 	touch bin/baked_assets/.dirstamp
-
-touch_all_necessary:
-	touch src/main.cpp
-	touch src/debug/logger.cpp
-	touch src/exit_program.cpp
-	touch src/main_game_code.cpp
-	touch src/rendering/camera_t.cpp
-	touch src/rendering/entity_renderer_t.cpp
-	touch src/rendering/renderer_t.cpp
-	touch src/shaders/entity_shader_t.cpp
-	touch src/shaders/shader_t.cpp
-	touch src/opengl/implementation.cpp
-	touch src/geometry/mesh_t.cpp
-	touch src/stb/implementation.cpp
-	touch src/texturing/skybox_texture_t.cpp
-	touch assets/skybox_face_image_0.png
 
 # The normal clean rule ignores swap files in case you have open vim instances. This is respectful to them.
 # Use the clean_include_swaps rule to clean every untracked file. You can do that if you don't have any vim instances open.
