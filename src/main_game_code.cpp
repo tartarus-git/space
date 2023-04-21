@@ -7,6 +7,10 @@
 #include "geometry/mesh_t.h"
 #include "texturing/texture_t.h"
 #include "entities/entity_t.h"
+#include "shaders/entity_shader_t.h"
+#include "texturing/skybox_texture_t.h"
+#include "skybox/skybox_t.h"
+#include "shaders/skybox_shader_t.h"
 #include "scene/scene_t.h"
 #include "rendering/camera_t.h"
 #include "math/vector3f_t.h"
@@ -24,7 +28,6 @@
 //#define MOUSE_ROTATION
 
 mesh_t test_entity_mesh;
-texture_t test_entity_texture;
 
 // NOTE: As an example (assuming entity_shader had a non-default constructor and assuming we wouldn't be using a ptr):
 // we can't non-default construct this shader directly in the global line, because the OpenGL context hasn't been setup
@@ -35,12 +38,19 @@ texture_t test_entity_texture;
 // TODO: Talk to std-discussion about it.
 entity_shader_t *entity_shader_ptr;
 
+mesh_t skybox_mesh;
+skybox_texture_t *skybox_texture_ptr;
+skybox_shader_t *skybox_shader_ptr;
+
 scene_t scene;
 
 camera_t camera;
 matrix4f_t projection_matrix;
 
 entity_renderer_t entity_renderer;
+// TODO: These globals are gonna get destructed after the OpenGL context is closed, is that bad? We could move all of this inside a game class,
+// then instantiate that class in main.cpp when the time is right, so that we can have all these globals as member variables and use them the
+// same way, we just wouldn't have to worry about any of this.
 
 namespace key_flags {
 	bool w = false;
@@ -141,9 +151,48 @@ void game_init(GLFWwindow *window) noexcept {
 		exit_program(EXIT_FAILURE);
 	}
 
+	skybox_mesh = mesh_t::gen_cube({ 0, 0, 0 }, { 1, 1, 1 });
+
+	skybox_texture_ptr = new (std::nothrow) skybox_texture_t(
+			{
+				baked_assets::skybox_image_0,
+				baked_assets::skybox_image_1,
+				baked_assets::skybox_image_2,
+				baked_assets::skybox_image_3,
+				baked_assets::skybox_image_4,
+				baked_assets::skybox_image_5
+		       	},
+			{
+				baked_assets::skybox_image_size_0,
+				baked_assets::skybox_image_size_1,
+				baked_assets::skybox_image_size_2,
+				baked_assets::skybox_image_size_3,
+				baked_assets::skybox_image_size_4,
+				baked_assets::skybox_image_size_5
+			}
+	);
+	if (!skybox_shader_ptr) {
+		debug::logger << "[ERROR]: failed to allocate skybox texture on host\n";
+		exit_program(EXIT_FAILURE);
+	}
+
+	skybox_t skybox {
+		&skybox_mesh,
+		&skybox_texture
+	};
+
+	skybox_shader_ptr = new (std::nothrow) skybox_shader_t;
+	if (!skybox_shader_ptr) {
+		debug::logger << "[ERROR]: failed to allocate skybox shader on host\n";
+		exit_program(EXIT_FAILURE);
+	}
+
 	scene = {
 		{ test_entity },
-		entity_shader_ptr
+		entity_shader_ptr,
+
+		skybox,
+		skybox_shader_ptr
 	};
 
 	camera = {
@@ -158,6 +207,7 @@ void game_init(GLFWwindow *window) noexcept {
 	projection_matrix = matrix4f_t::gen_projection(0.1f, 1000, width / height, 1);
 
 	entity_renderer = entity_renderer_t(&scene, camera, &projection_matrix);
+	skybox_renderer = skybox_renderer_t(&scene, camera, &projection_matrix);
 }
 
 matrix4f_t player_controlled_camera_rotation_matrix = matrix4f_t::gen_identity();
