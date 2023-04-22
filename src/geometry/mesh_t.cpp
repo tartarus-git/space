@@ -9,7 +9,11 @@
 #include "math/vector3f_t.h"
 #include "math/vector3ui_t.h"
 
-void mesh_t::initialize() noexcept {
+mesh_t::mesh_t(std::vector<vector3f_t> vertices, 
+	       std::vector<vector3ui_t> indices) noexcept : 
+		vertices(vertices), 
+		indices(indices) {
+
 	// TODO: Check about error handling here.
 	glGenVertexArrays(1, &VAO_id);
 	glBindVertexArray(VAO_id);
@@ -19,18 +23,31 @@ void mesh_t::initialize() noexcept {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
 	glGenBuffers(1, &index_buffer_id);
-}
 
-mesh_t::mesh_t(std::vector<vector3f_t> vertices, 
-	       std::vector<vector3ui_t> indices) noexcept : 
-		vertices(vertices), 
-		indices(indices) {
-
-	initialize();
 	update_device_buffers();
+
 	disposed = false;
 
 }
+
+mesh_t& mesh_t::operator=(mesh_t&& other) noexcept {
+	dispose();
+
+	disposed = other.disposed;
+
+	vertices = std::move(other.vertices);
+	indices = std::move(other.indices);
+
+	VAO_id = other.VAO_id;
+	vertex_buffer_id = other.vertex_buffer_id;
+	index_buffer_id = other.index_buffer_id;
+
+	other.disposed = true;
+
+	return *this;
+}
+
+mesh_t::mesh_t(mesh_t&& other) noexcept { *this = std::move(other); }
 
 void mesh_t::update_device_buffers() const noexcept {
 	glBindVertexArray(VAO_id);
@@ -48,27 +65,18 @@ void mesh_t::update_device_buffers() const noexcept {
 		     GL_STATIC_DRAW);
 }
 
-mesh_t& mesh_t::operator=(mesh_t&& other) noexcept {
-	dispose();
-	VAO_id = other.VAO_id;
-	vertex_buffer_id = other.vertex_buffer_id;
-	index_buffer_id = other.index_buffer_id;
-	vertices = std::move(other.vertices);
-	indices = std::move(other.indices);
-	other.disposed = true;
-}
-
-mesh_t::mesh_(mesh_t&& other) noexcept {
-	*this = std::move(other);
-}
-
 void mesh_t::dispose() noexcept {
 	if (disposed) { return; }
-	glDeleteBuffers(1, &vertex_buffer_id);
+
 	glDeleteBuffers(1, &index_buffer_id);
+	glDeleteBuffers(1, &vertex_buffer_id);
 	glDeleteVertexArrays(1, &VAO_id);
-	vertices.clear();
+
 	indices.clear();
+	indices.shrink_to_fit();
+	vertices.clear();
+	vertices.shrink_to_fit();
+
 	disposed = true;
 }
 
@@ -77,14 +85,14 @@ mesh_t::~mesh_t() noexcept { dispose(); }
 mesh_t mesh_t::gen_cube(vector3f_t position, vector3f_t scale) noexcept {
 	return mesh_t(
 		{
-			{  1,  1,  1 } * scale + position,
-			{  1,  1, -1 } * scale + position,
-			{  1, -1,  1 } * scale + position,
-			{  1, -1, -1 } * scale + position,
-			{ -1,  1,  1 } * scale + position,
-			{ -1,  1, -1 } * scale + position,
-			{ -1, -1,  1 } * scale + position,
-			{ -1, -1, -1 } * scale + position,
+			vector3f_t{  1,  1,  1 } * scale + position,
+			vector3f_t{  1,  1, -1 } * scale + position,
+			vector3f_t{  1, -1,  1 } * scale + position,
+			vector3f_t{  1, -1, -1 } * scale + position,
+			vector3f_t{ -1,  1,  1 } * scale + position,
+			vector3f_t{ -1,  1, -1 } * scale + position,
+			vector3f_t{ -1, -1,  1 } * scale + position,
+			vector3f_t{ -1, -1, -1 } * scale + position,
 		},
 		{
 			{ 0, 1, 2 },

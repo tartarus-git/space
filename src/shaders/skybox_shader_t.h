@@ -12,10 +12,8 @@ public:
 	GLuint shader_view_transform;
 	GLuint shader_projection_transform;
 
-	entity_shader_t() noexcept;
+	skybox_shader_t() noexcept;
 
 	void load_view_transform(const matrix4f_t& matrix) const noexcept;
 	void load_projection_transform(const matrix4f_t& matrix) const noexcept;
-
-	// TODO: destructor
 };

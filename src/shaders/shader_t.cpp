@@ -11,6 +11,8 @@
 #include "debug/logger.h"
 #include "exit_program.h"
 
+shader_t::~shader_t() noexcept { glDeleteProgram(program_id); }
+
 void shader_t::set_shader_source_and_compile(GLuint shader_id, const char *source_debug_id, const char *source) noexcept {
 	glShaderSource(shader_id, 1, &source, nullptr);
 	// TODO: What about errors on all these opengl functions. Figure that out later.
@@ -52,7 +54,6 @@ shader_t::shader_t(const char *vertex_source_debug_id, const char *vertex_source
 
 	set_shader_source_and_compile(vertex_shader_id, vertex_source_debug_id, vertex_source);
 	set_shader_source_and_compile(fragment_shader_id, fragment_source_debug_id, fragment_source);
-	// TODO: Implement above function.
 
 	program_id = glCreateProgram();
 	if (program_id == 0) {

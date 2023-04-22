@@ -26,7 +26,7 @@ public:
 		return { x - other.x, y - other.y, z - other.z };
 	}
 
-	constexpr vector3f_t& operator*(const vector3f_t& other) noexcept {
+	constexpr vector3f_t operator*(const vector3f_t& other) noexcept {
 		return { x * other.x, y * other.y, z * other.y };
 	}
 };

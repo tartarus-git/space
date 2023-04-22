@@ -9,29 +9,26 @@
 #include "math/vector3ui_t.h"
 
 class mesh_t {
-	void initialize() noexcept;
-
 public:
 	bool disposed = true;
+
+	std::vector<vector3f_t> vertices;
+	std::vector<vector3ui_t> indices;
 
 	GLuint VAO_id;
 	GLuint vertex_buffer_id;
 	GLuint index_buffer_id;
 
-	std::vector<vector3f_t> vertices;
-	std::vector<vector3ui_t> indices;
+	constexpr mesh_t() noexcept = default;
+	mesh_t(std::vector<vector3f_t> vertices, std::vector<vector3ui_t> indices) noexcept;
 
-	mesh_t() noexcept = default;
-	mesh_t(std::vector<vector3f_t> vertices, 
-	       std::vector<vector3ui_t> indices) noexcept;
-
-	void update_device_buffers() const noexcept;
-
-	mesh_t(const mesh_t& other) = delete;
 	mesh_t& operator=(const mesh_t& other) = delete;
+	mesh_t(const mesh_t& other) = delete;
 
 	mesh_t& operator=(mesh_t&& other) noexcept;
 	mesh_t(mesh_t&& other) noexcept;
+
+	void update_device_buffers() const noexcept;
 
 	void dispose() noexcept;
 

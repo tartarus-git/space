@@ -5,6 +5,8 @@
 #include "entity_renderer_t.h"
 
 #include "scene/scene_t.h"
+#include "rendering/camera_t.h"
+#include "math/matrix4f_t.h"
 
 entity_renderer_t::entity_renderer_t(const scene_t *scene, 
 				     const camera_t& camera, 

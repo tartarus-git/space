@@ -2,10 +2,17 @@
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
-#include "main_game_code.h"
+#include <new>
+
+#include "game_t.h"
 
 #include "debug/logger.h"
 #include "exit_program.h"
+
+// NOTE: We're forced to use a pointer and then heap allocate in order to be able to default construct this at exactly the right point.
+// Suboptimal, but necessary. I wish C++ would be better about this.
+// TODO: Mention this problem somewhere and see what can be done about it, maybe we can influence the standard somehow.
+game_t *game;
 
 void glfw_error_callback(int error, const char *description) noexcept {
 	debug::logger << "[ERROR]: glfw_error_callback: err_num: " << error << " description: " << description << '\n';
@@ -48,13 +55,11 @@ void APIENTRY opengl_debug_message_callback(GLenum source,
 }
 
 void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) noexcept {
-	// NOTE: This function is found in main_game_code.h
-	key_event(window, key, scancode, action, mods);
+	game->key_event(key, scancode, action, mods);
 }
 
 void glfw_cursor_position_callback(GLFWwindow *window, double x, double y) noexcept {
-	// NOTE: This function is found in main_game_code.h
-	cursor_position_event(window, x, y);
+	game->cursor_position_event(x, y);
 }
 
 int main() {
@@ -95,14 +100,17 @@ int main() {
 	glfwSwapInterval(1);
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);		// NOTE: This depth function is necessary for skybox to work properly.
 
 	glClearColor(0, 0, 1, 0);
 
-	debug::logger << "[INFO]: calling game_init()\n";
-	// NOTE: Function in main_game_code.h. I didn't call it init because that seems like a name that could lead to nasty collisions.
-	game_init(window);
-	debug::logger << "[INFO]: game_init() finished\n";
+	debug::logger << "[INFO]: constructing game_t object...\n";
+	game = new (std::nothrow) game_t(window);
+	if (!game) {
+		debug::logger << "[ERROR]: failed to allocate game_t object in RAM\n";
+		exit_program(EXIT_FAILURE);
+	}
+	debug::logger << "[INFO]: game_t construction finished\n";
 
 	glfwSetKeyCallback(window, glfw_key_callback);
 
@@ -126,12 +134,14 @@ int main() {
 
 	while (!glfwWindowShouldClose(window)) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		game_loop(window);
+		game->loop();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 
 	debug::logger << "[INFO]: window loop exited\n";
+
+	delete game;
 
 	glfwDestroyWindow(window);
 

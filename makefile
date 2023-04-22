@@ -4,10 +4,12 @@
 # There should also be a tool to list all the cpp files in a folder tree and write them side-by-side for use in the makefile.
 # Maybe also a tool to generate the bin/debug/x.o: etc... pattern over and over for every file.
 
-MAIN_CPP_INCLUDES              := src/main_game_code.cpp src/debug/logger.h src/exit_program.h
+# TODO: You definitely need to create a tool to get all headers because headers in headers don't get recognized by this makefile,
+# we could make that work, but it would require creating a bunch more rules filled with touch commands, and I don't want to.
+# CREATE THE TOOL.
+MAIN_CPP_INCLUDES              := src/geometry/mesh_t.h src/texturing/texture_t.h src/entities/entity_t.h src/shaders/entity_shader_t.h src/texturing/skybox_texture_t.h src/skybox/skybox_t.h src/shaders/skybox_shader_t.h src/scene/scene_t.h src/rendering/camera_t.h src/math/vector3f_t.h src/math/vector4f_t.h src/math/matrix4f_t.h src/rendering/entity_renderer_t.h src/rendering/skybox_renderer_t.h src/debug/logger.h src/exit_program.h
 DEBUG_LOGGER_CPP_INCLUDES      := src/debug/logger.h
 EXIT_PROGRAM_CPP_INCLUDES      := src/exit_program.h
-MAIN_GAME_CODE_CPP_INCLUDES    := src/main_game_code.h src/geometry/mesh_t.h src/texturing/texture_t.h src/entities/entity_t.h src/shaders/entity_shader_t.h src/texturing/skybox_texture_t.h src/skybox/skybox_t.h src/shaders/skybox_shader_t.h src/scene/scene_t.h src/rendering/camera_t.h src/math/vector3f_t.h src/math/vector4f_t.h src/math/matrix4f_t.h src/rendering/entity_renderer_t.h src/debug/logger.h src/exit_program.h
 CAMERA_T_CPP_INCLUDES          := src/rendering/camera_t.h src/math/matrix4f_t.h
 ENTITY_RENDERER_T_CPP_INCLUDES := src/rendering/renderer_t.h src/rendering/entity_renderer_t.h src/scene/scene_t.h
 RENDERER_T_CPP_INCLUDES        := src/rendering/renderer_t.h src/scene/scene_t.h
@@ -29,7 +31,7 @@ else
 undefine POSSIBLE_WALL
 endif
 
-CLANG_PREAMBLE := $(CLANG_PROGRAM_NAME) -std=$(CPP_STD) -$(OPTIMIZATION_LEVEL) $(POSSIBLE_WALL) -fno-exceptions -pthread
+CLANG_PREAMBLE := $(CLANG_PROGRAM_NAME) -std=$(CPP_STD) -$(OPTIMIZATION_LEVEL) $(POSSIBLE_WALL) -Wno-missing-braces -fno-exceptions -pthread
 
 .PHONY: all unoptimized clean clean_include_swaps
 
@@ -38,8 +40,8 @@ all: bin/$(BINARY_NAME)
 unoptimized:
 	$(MAKE) OPTIMIZATION_LEVEL:=O0
 
-bin/$(BINARY_NAME): bin/*.o bin/debug/*.o bin/rendering/*.o bin/shaders/*.o bin/opengl/*.o bin/geometry/*.o bin/baked_assets/*.o
-	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/*.o bin/debug/*.o bin/rendering/*.o bin/shaders/*.o bin/opengl/*.o bin/geometry/*.o bin/baked_assets/*.o -lGL -lglfw
+bin/$(BINARY_NAME): bin/main.o bin/debug/logger.o bin/exit_program.o bin/rendering/camera_t.o bin/rendering/entity_renderer_t.o bin/rendering/renderer_t.o bin/shaders/entity_shader_t.o bin/shaders/shader_t.o bin/opengl/implementation.o bin/texturing/skybox_texture_t.o bin/shaders/skybox_shader_t.o bin/rendering/skybox_renderer_t.o bin/geometry/mesh_t.o bin/stb/implementation.o bin/baked_assets/skybox_face_images.o
+	$(CLANG_PREAMBLE) -o bin/$(BINARY_NAME) bin/*.o bin/debug/*.o bin/rendering/*.o bin/shaders/*.o bin/opengl/*.o bin/geometry/*.o bin/stb/*.o bin/baked_assets/*.o bin/texturing/*.o -lGL -lglfw
 
 bin/main.o: src/main.cpp $(MAIN_CPP_INCLUDES) bin/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/main.o src/main.cpp
@@ -49,9 +51,6 @@ bin/debug/logger.o: src/debug/logger.cpp $(DEBUG_LOGGER_CPP_INCLUDES) bin/debug/
 
 bin/exit_program.o: src/exit_program.cpp $(EXIT_PROGRAM_CPP_INCLUDES) bin/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/exit_program.o src/exit_program.cpp
-
-bin/main_game_code.o: src/main_game_code.cpp $(MAIN_GAME_CODE_CPP_INCLUDES) bin/.dirstamp
-	$(CLANG_PREAMBLE) -c -Isrc -o bin/main_game_code.o src/main_game_code.cpp
 
 bin/rendering/camera_t.o: src/rendering/camera_t.cpp $(CAMERA_T_CPP_INCLUDES) bin/rendering/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/rendering/camera_t.o src/rendering/camera_t.cpp
@@ -80,28 +79,31 @@ bin/stb/implementation.o: src/stb/implementation.cpp src/stb/stb_image.h bin/stb
 bin/texturing/skybox_texture_t.o: src/texturing/skybox_texture_t.cpp $(SKYBOX_TEXTURE_T_CPP_INCLUDES) bin/texturing/.dirstamp
 	$(CLANG_PREAMBLE) -c -Isrc -o bin/texturing/skybox_texture_t.o src/texturing/skybox_texture_t.cpp
 
+bin/shaders/skybox_shader_t.o: src/shaders/skybox_shader_t.cpp $(SKYBOX_SHADER_T_CPP_INCLUDES) bin/shaders/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/shaders/skybox_shader_t.o src/shaders/skybox_shader_t.cpp
+
+bin/rendering/skybox_renderer_t.o: src/rendering/skybox_renderer_t.cpp $(SKYBOX_RENDERER_T_CPP_INCLUDES) bin/rendering/.dirstamp
+	$(CLANG_PREAMBLE) -c -Isrc -o bin/rendering/skybox_renderer_t.o src/rendering/skybox_renderer_t.cpp
+
 src/baked_assets/skybox_face_images.cpp: assets/skybox_face_image_0.png assets/skybox_face_image_1.png assets/skybox_face_image_2.png assets/skybox_face_image_3.png assets/skybox_face_image_4.png assets/skybox_face_image_5.png
 	echo -n "#include \"skybox_face_images.h\"\nnamespace baked_assets {\n" > src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_0_data c++ < assets/skybox_face_image_0.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_0 = skybox_face_image_0_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_0 = skybox_face_image_0_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_0 = sizeof(skybox_face_image_0_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_1_data c++ < assets/skybox_face_image_1.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_1 = skybox_face_image_1_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_1 = skybox_face_image_1_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_1 = sizeof(skybox_face_image_1_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_2_data c++ < assets/skybox_face_image_2.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_2 = skybox_face_image_2_data;\n" >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const size_t skybox_face_image_size_2 = sizeof(skybox_face_image_2_data);\n" >> src/baked_assets/skybox_face_images.cpp
-	srcembed --varname skybox_face_image_2_data c++ < assets/skybox_face_image_2.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_2 = skybox_face_image_2_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_2 = skybox_face_image_2_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_2 = sizeof(skybox_face_image_2_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_3_data c++ < assets/skybox_face_image_3.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_3 = skybox_face_image_3_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_3 = skybox_face_image_3_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_3 = sizeof(skybox_face_image_3_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_4_data c++ < assets/skybox_face_image_4.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_4 = skybox_face_image_4_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_4 = skybox_face_image_4_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_4 = sizeof(skybox_face_image_4_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	srcembed --varname skybox_face_image_5_data c++ < assets/skybox_face_image_5.png >> src/baked_assets/skybox_face_images.cpp
-	echo -n "const char *skybox_face_image_5 = skybox_face_image_5_data;\n" >> src/baked_assets/skybox_face_images.cpp
+	echo -n "const unsigned char *skybox_face_image_5 = skybox_face_image_5_data;\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "const size_t skybox_face_image_size_5 = sizeof(skybox_face_image_5_data);\n" >> src/baked_assets/skybox_face_images.cpp
 	echo -n "}\n" >> src/baked_assets/skybox_face_images.cpp
 
@@ -131,6 +133,10 @@ bin/opengl/.dirstamp: bin/.dirstamp
 bin/geometry/.dirstamp: bin/.dirstamp
 	mkdir -p bin/geometry
 	touch bin/geometry/.dirstamp
+
+bin/stb/.dirstamp: bin/.dirstamp
+	mkdir -p bin/stb
+	touch bin/stb/.dirstamp
 
 bin/texturing/.dirstamp: bin/.dirstamp
 	mkdir -p bin/texturing

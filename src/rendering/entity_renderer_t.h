@@ -4,10 +4,8 @@
 
 #include "scene/scene_t.h"
 #include "camera_t.h"
-
 #include "math/matrix4f_t.h"
 
-// TODO: Add public keyword to all other inheritances as well.
 class entity_renderer_t : public renderer_t {
 public:
 	matrix4f_t view_transform;
